@@ -87,7 +87,13 @@ over the last twelve months (it was {prev[1]:+.1%} a month earlier). The signal
 moves past a 1-point band, so it has flipped from {name(prev[2])} to {name(eq)}.
 
   IRA / tax-advantaged:  sell {old}, buy {new} with the whole balance.
-  Taxable:               send new contributions to {new}. Sell nothing.
+  Taxable:               nothing. Stay in {CAP} and keep contributing; in a crash,
+                         harvest losses (sell lots below cost, buy a near-twin
+                         fund the same day) rather than getting out.
+
+Why taxable stays put: over 1991-2026 switching a taxable account paid tax at
+every flip and ended -4% to +5% against holding, before state tax; routing only
+new money there ended behind. The switch pays only where selling is untaxed.
 
 This email is sent on three consecutive days, then stops until the next flip.
 """

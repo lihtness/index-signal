@@ -34,11 +34,11 @@ class Signal(unittest.TestCase):
         flips = sum(a != b for a, b in zip(seq, seq[1:]))
         self.assertEqual(flips, 2)
 
-    def test_flip_email_names_both_accounts(self):
+    def test_flip_email_switches_ira_and_leaves_taxable(self):
         subject, body = flip_email(("2026-08", -0.005, False), ("2026-09", 0.012, True))
         self.assertIn("RSP", subject)
         self.assertIn("sell SPY, buy RSP", body)
-        self.assertIn("Sell nothing", body)
+        self.assertIn("Taxable:               nothing. Stay in SPY", body)
 
 
 if __name__ == "__main__":
