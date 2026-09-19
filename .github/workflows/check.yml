@@ -1,0 +1,28 @@
+name: index signal
+
+on:
+  schedule:
+    - cron: "0 14 2-4 * *"     # 14:00 UTC on the 2nd, 3rd and 4th of every month
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: "Send a status email even if nothing changed"
+        type: boolean
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest -q test_signal_check
+      - run: python signal_check.py ${{ inputs.test_email && '--test-email' || '' }}
+        env:
+          TIINGO_TOKEN: ${{ secrets.TIINGO_TOKEN }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
