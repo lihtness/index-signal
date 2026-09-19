@@ -1,7 +1,8 @@
 import unittest
 from datetime import date
 
-from signal_check import flip_email, month_ends, states
+from render import chart_rows, flip_html, run_length
+from signal_check import BAND, CAP, EQUAL, flip_email, month_ends, states
 
 
 def series(monthly_returns: list[float]) -> dict[str, float]:
@@ -35,10 +36,38 @@ class Signal(unittest.TestCase):
         self.assertEqual(flips, 2)
 
     def test_flip_email_switches_ira_and_leaves_taxable(self):
-        subject, body = flip_email(("2026-08", -0.005, False), ("2026-09", 0.012, True))
+        subject, body, _ = flip_email(("2026-08", -0.005, False), ("2026-09", 0.012, True))
         self.assertIn("RSP", subject)
         self.assertIn("sell SPY, buy RSP", body)
         self.assertIn("Taxable:               nothing. Stay in SPY", body)
+
+
+class Render(unittest.TestCase):
+    def hist(self):
+        cap, eq = series([0.01] * 48), series([0.0] * 12 + [0.03] * 12 + [0.0] * 24)
+        return states(cap, eq)
+
+    def test_run_length_counts_back_to_the_last_flip(self):
+        held, began = run_length(self.hist())
+        self.assertGreater(held, 0)
+        self.assertRegex(began, r"^\d{4}-\d{2}$")
+
+    def test_chart_bars_stay_inside_their_half(self):
+        rows = chart_rows(self.hist())
+        self.assertEqual(len(rows), 36)
+        for r in rows:
+            self.assertEqual(r["width"] + r["pad"], r["half"])
+            self.assertGreaterEqual(r["width"], 2)
+        self.assertNotEqual(rows[-1]["label"], "")
+
+    def test_html_carries_both_actions_and_no_script(self):
+        hist = self.hist()
+        html = flip_html(hist[-2], hist[-1], hist, CAP, EQUAL, BAND)
+        self.assertIn("IRA", html)
+        self.assertIn(f"buy <b>{CAP if not hist[-1][2] else EQUAL}</b>", html)
+        self.assertIn("do nothing", html)
+        self.assertNotIn("<script", html)
+        self.assertNotIn("{{", html)
 
 
 if __name__ == "__main__":

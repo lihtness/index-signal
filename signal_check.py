@@ -27,8 +27,11 @@ import os
 import smtplib
 import sys
 import urllib.request
+from pathlib import Path
 from datetime import date, datetime, timezone
 from email.message import EmailMessage
+
+from render import flip_html
 
 CAP, EQUAL = "SPY", "RSP"
 BAND = 0.01
@@ -78,7 +81,8 @@ def name(eq: bool) -> str:
     return f"equal-weight ({EQUAL})" if eq else f"cap-weight S&P 500 ({CAP})"
 
 
-def flip_email(prev: tuple[str, float, bool], now: tuple[str, float, bool]) -> tuple[str, str]:
+def flip_email(prev: tuple[str, float, bool], now: tuple[str, float, bool],
+               hist: list[tuple[str, float, bool]] | None = None) -> tuple[str, str, str | None]:
     m, gap, eq = now
     new, old = (EQUAL, CAP) if eq else (CAP, EQUAL)
     subject = f"Index signal flipped to {name(eq)}"
@@ -97,10 +101,11 @@ new money there ended behind. The switch pays only where selling is untaxed.
 
 This email is sent on three consecutive days, then stops until the next flip.
 """
-    return subject, body
+    return subject, body, flip_html(prev, now, hist, CAP, EQUAL, BAND) if hist else None
 
 
-def status_email(now: tuple[str, float, bool], hist: list[tuple[str, float, bool]]) -> tuple[str, str]:
+def status_email(now: tuple[str, float, bool],
+                 hist: list[tuple[str, float, bool]]) -> tuple[str, str, None]:
     m, gap, eq = now
     flips = [b for a, b in zip(hist, hist[1:]) if a[2] != b[2]]
     last = flips[-1][0] if flips else "never"
@@ -109,15 +114,17 @@ def status_email(now: tuple[str, float, bool], hist: list[tuple[str, float, bool
 over twelve months; the signal is {name(eq)}, unchanged since {last}.
 Nothing to do.
 """
-    return subject, body
+    return subject, body, None
 
 
-def send(subject: str, body: str) -> None:
+def send(subject: str, body: str, html: str | None = None) -> None:
     user, pw = os.environ["GMAIL_USER"], os.environ["GMAIL_APP_PASSWORD"]
     msg = EmailMessage()
     msg["From"], msg["To"] = user, os.environ.get("MAIL_TO") or user
     msg["Subject"] = subject
     msg.set_content(body)
+    if html:
+        msg.add_alternative(html, subtype="html")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as s:
         s.login(user, pw)
         s.send_message(msg)
@@ -127,6 +134,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--test-email", action="store_true")
+    ap.add_argument("--force-flip", action="store_true",
+                    help="render the email for the last month as though it had flipped")
+    ap.add_argument("--html-out", help="with --dry-run, write the HTML to this file")
     args = ap.parse_args()
 
     today = datetime.now(timezone.utc).date()
@@ -135,14 +145,21 @@ def main() -> int:
     print(f"{now[0]}: gap {now[1]:+.2%} -> {name(now[2])}"
           f"{'  (FLIPPED)' if prev[2] != now[2] else ''}")
 
+    if args.force_flip:
+        prev = (prev[0], prev[1], not now[2])
+        hist = hist[:-1] + [now]
+
     mail = None
     if prev[2] != now[2]:
-        mail = flip_email(prev, now)
+        mail = flip_email(prev, now, hist)
     elif args.test_email or (today.month == 1 and today.day == 2):
         mail = status_email(now, hist)
 
     if mail and args.dry_run:
         print(f"\n--- would send ---\nSubject: {mail[0]}\n\n{mail[1]}")
+        if mail[2] and args.html_out:
+            Path(args.html_out).write_text(mail[2])
+            print(f"html written to {args.html_out}")
     elif mail:
         send(*mail)
         print(f"sent: {mail[0]}")

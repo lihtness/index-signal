@@ -9,6 +9,10 @@ on:
         description: "Send a status email even if nothing changed"
         type: boolean
         default: false
+      force_flip:
+        description: "Send the flip email for the latest month as a preview"
+        type: boolean
+        default: false
 
 jobs:
   check:
@@ -19,8 +23,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - run: pip install -r requirements.txt
       - run: python -m unittest -q test_signal_check
-      - run: python signal_check.py ${{ inputs.test_email && '--test-email' || '' }}
+      - run: python signal_check.py ${{ inputs.test_email && '--test-email' || '' }} ${{ inputs.force_flip && '--force-flip' || '' }}
         env:
           TIINGO_TOKEN: ${{ secrets.TIINGO_TOKEN }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}

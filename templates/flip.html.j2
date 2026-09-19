@@ -1,0 +1,127 @@
+{% set INK = "#1a1a1a" %}
+{% set MUTED = "#6b6b6b" %}
+{% set RULE = "#e4e2dd" %}
+{% set PAPER = "#ffffff" %}
+{% set PANEL = "#f7f6f3" %}
+{% set UP = "#2f6f4f" %}
+{% set DOWN = "#8c5a3c" %}
+{% set ACT = "#1a4d8f" %}
+{% set SKIP = "#8a8a8a" %}
+{% set SANS = "-apple-system,Segoe UI,Helvetica,Arial,sans-serif" %}
+{% macro eyebrow(text, colour) %}
+<tr><td style="padding:26px 0 10px;color:{{ colour }};font:600 11px/14px {{ SANS }};letter-spacing:.14em;text-transform:uppercase">{{ text }}</td></tr>
+{% endmacro %}
+{% macro blank(w) %}<td width="{{ w }}" style="font-size:0;line-height:0">&nbsp;</td>{% endmacro %}
+<!doctype html>
+<html>
+<body style="margin:0;padding:0;background:{{ PANEL }}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">Tax-free account moves to {{ buy }}. Taxable: nothing.</div>
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="100%" style="background:{{ PANEL }};border-collapse:collapse">
+<tr><td align="center" style="padding:28px 12px">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="600" style="width:600px;max-width:100%;background:{{ PAPER }};border:1px solid {{ RULE }};border-collapse:collapse">
+<tr><td style="padding:34px 40px 0">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="100%" style="border-collapse:collapse">
+
+  <tr><td>
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" width="100%" style="border-collapse:collapse"><tr>
+      <td style="font:600 11px/14px {{ SANS }};letter-spacing:.14em;text-transform:uppercase;color:{{ UP if equal_ahead else ACT }}">Signal flipped</td>
+      <td align="right" style="font:400 11px/14px {{ SANS }};color:{{ MUTED }}">{{ month }} close</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="font:400 30px/38px Georgia,'Times New Roman',serif;color:{{ INK }};padding:12px 0 6px">
+    Move to {{ "equal-weight" if equal_ahead else "the cap-weighted S&P 500" }}<span style="color:{{ MUTED }}"> &middot; {{ buy }}</span>
+  </td></tr>
+  <tr><td style="font:400 15px/23px {{ SANS }};color:{{ MUTED }}">
+    {{ equal }} has returned <b style="color:{{ INK }}">{{ gap|pct }}</b> against {{ cap }} over the last twelve
+    months, past the &plusmn;{{ band|abs|round(2) * 100 }}-point band, after {{ held }} months in {{ was }}
+    since {{ began }}.
+  </td></tr>
+
+  <tr><td style="padding:24px 0 4px">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" width="100%" style="border-collapse:collapse">
+      <tr><td style="background:{{ PANEL }};border-left:3px solid {{ ACT }};padding:16px 18px">
+        <div style="font:600 11px/14px {{ SANS }};letter-spacing:.12em;text-transform:uppercase;color:{{ ACT }}">IRA &amp; 401(k) &mdash; do this</div>
+        <div style="font:400 16px/24px {{ SANS }};color:{{ INK }};padding-top:6px">
+          Sell <b>{{ sell }}</b>, buy <b>{{ buy }}</b> with the whole balance. Point future contributions at {{ buy }} too.
+        </div>
+        <div style="font:400 13px/20px {{ SANS }};color:{{ MUTED }};padding-top:4px">
+          No tax is due on a sale here, which is the only reason this switch is worth making.
+        </div>
+      </td></tr>
+      <tr>{{ blank(10) }}</tr>
+      <tr><td style="background:{{ PANEL }};border-left:3px solid {{ SKIP }};padding:16px 18px">
+        <div style="font:600 11px/14px {{ SANS }};letter-spacing:.12em;text-transform:uppercase;color:{{ SKIP }}">Taxable &mdash; do nothing</div>
+        <div style="font:400 16px/24px {{ SANS }};color:{{ INK }};padding-top:6px">Stay in <b>{{ cap }}</b> and keep contributing.</div>
+        <div style="font:400 13px/20px {{ SANS }};color:{{ MUTED }};padding-top:4px">
+          Switching here pays tax at every flip: &minus;4% to +5% against simply holding over 1991&ndash;2026, and
+          &minus;16% against never selling. In a crash, harvest losses instead &mdash; sell lots below cost and buy a
+          near-twin fund the same day.
+        </div>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  {{ eyebrow("The twelve-month gap, " ~ equal ~ " minus " ~ cap, MUTED) }}
+  <tr><td style="padding-bottom:6px">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%;border-collapse:collapse;font:12px/16px {{ SANS }}">
+      {% for row in chart %}
+      <tr>
+        <td width="62" align="right" style="color:{{ MUTED }};padding-right:8px;white-space:nowrap">{{ row.label }}</td>
+        <td>
+          <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse"><tr>
+            {% if row.ahead %}
+              {{ blank(row.half) }}
+            {% else %}
+              {{ blank(row.pad) }}<td width="{{ row.width }}" style="background:{{ DOWN }};font-size:0;line-height:0">&nbsp;</td>
+            {% endif %}
+            <td width="1" style="background:{{ RULE }};font-size:0;line-height:0">&nbsp;</td>
+            {% if row.ahead %}
+              <td width="{{ row.width }}" style="background:{{ UP }};font-size:0;line-height:0">&nbsp;</td>{{ blank(row.pad) }}
+            {% else %}
+              {{ blank(row.half) }}
+            {% endif %}
+          </tr></table>
+        </td>
+        <td width="52" style="color:{{ UP if row.ahead else DOWN }};padding-left:8px;white-space:nowrap">{{ row.gap|pct }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </td></tr>
+  <tr><td style="font:400 12px/18px {{ SANS }};color:{{ MUTED }};padding-bottom:4px">
+    Each row is one month-end. The line down the middle is a tie; the band ignores anything inside one point, which
+    halves the false alarms at no cost in return.
+  </td></tr>
+
+  {% if flips %}
+  {{ eyebrow("Previous flips", MUTED) }}
+  <tr><td style="font:400 13px/19px {{ SANS }}">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse">
+      {% for f in flips %}
+      <tr>
+        <td style="padding:3px 16px 3px 0;color:{{ MUTED }};white-space:nowrap">{{ f.month }}</td>
+        <td style="padding:3px 0;color:{{ INK }}">to {{ f.to }}<span style="color:{{ MUTED }}"> &nbsp;gap {{ f.gap|pct }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </td></tr>
+  {% endif %}
+
+  {{ eyebrow("What this is worth", MUTED) }}
+  <tr><td style="font:400 13px/20px {{ SANS }};color:{{ MUTED }}">
+    This is insurance, not an edge. Over 1927&ndash;2026 the rule finished about level with holding the S&amp;P: it paid
+    in the decades the mega-caps lagged (1930s +1.2 a year, 1940s +1.0, 2000s +1.6) and gave it back when they led
+    (1950s &minus;0.7, 2020s &minus;1.4). In the one favourable decade a real fund lived through, {{ equal }} returned
+    +87% against {{ cap }}&rsquo;s +51% from 2003 to 2010. It does nothing for a crash: in 1929&ndash;32 both sides
+    fell 84%.
+  </td></tr>
+  <tr><td style="border-top:1px solid {{ RULE }};padding:16px 0 30px;font:400 12px/18px {{ SANS }};color:{{ MUTED }}">
+    Sent on three consecutive days, then silent until the next flip. Prices from Tiingo, month-end adjusted closes.
+    Rule and evidence: lihtness/index-signal, and pf&rsquo;s scripts/index_rotation*.py.
+  </td></tr>
+
+</table>
+</td></tr></table>
+</td></tr></table>
+</body>
+</html>
