@@ -67,11 +67,11 @@ def chart_rows(hist: list[Reading], months: int = CHART_MONTHS, half: int = HALF
 
 
 def flip_html(prev: Reading, now: Reading, hist: list[Reading],
-              cap: str, equal: str, band: float) -> str:
+              cap: str, equal: str, band: float, page: str = "") -> str:
     m, gap, eq = now
     held, began = run_length(hist[:-1])
     return env.get_template("flip.html.j2").render(
-        cap=cap, equal=equal, band=band,
+        cap=cap, equal=equal, band=band, page=page,
         month=pretty(m), gap=gap, equal_ahead=eq,
         buy=equal if eq else cap, sell=cap if eq else equal,
         held=held, began=pretty(began),

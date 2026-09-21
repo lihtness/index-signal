@@ -33,6 +33,8 @@ from email.message import EmailMessage
 
 from render import flip_html
 
+PAGE = "https://lihtness.github.io/index-signal/"
+
 CAP, EQUAL = "SPY", "RSP"
 BAND = 0.01
 SINCE = "2003-05-01"          # RSP's first month
@@ -99,9 +101,15 @@ Why taxable stays put: over 1991-2026 switching a taxable account paid tax at
 every flip and ended -4% to +5% against holding, before state tax; routing only
 new money there ended behind. The switch pays only where selling is untaxed.
 
+The page below carries the same reading, the whole history since 2004, and what
+the rule did in the decades it helped and the decades it cost:
+
+  {PAGE}
+
 This email is sent on three consecutive days, then stops until the next flip.
 """
-    return subject, body, flip_html(prev, now, hist, CAP, EQUAL, BAND) if hist else None
+    body = body.replace("{PAGE}", PAGE)
+    return subject, body, flip_html(prev, now, hist, CAP, EQUAL, BAND, PAGE) if hist else None
 
 
 def status_email(now: tuple[str, float, bool],
@@ -113,6 +121,8 @@ def status_email(now: tuple[str, float, bool],
     body = f"""The job is running. At the {m} close {EQUAL} is {gap:+.1%} against {CAP}
 over twelve months; the signal is {name(eq)}, unchanged since {last}.
 Nothing to do.
+
+The page, rebuilt daily, is at {PAGE}
 """
     return subject, body, None
 
